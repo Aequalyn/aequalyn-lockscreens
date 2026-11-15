@@ -1,0 +1,15 @@
+[SddmGreeterTheme]
+Name=Aequalyn
+Description=The default Aequalyn login screen — branded, minimal, and clean.
+Author=Aequalyn
+Copyright=(c) 2026 Aequalyn
+License=MIT
+Type=sddm-theme
+Version=1.0
+MainScript=Main.qml
+Screenshot=screenshot.png
+ConfigFile=theme.conf
+Theme-Id=aequalyn
+Theme-API=2.0
+QtVersion=6
+X-SDDM-Theme-InterfaceVersion=2
