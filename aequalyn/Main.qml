@@ -17,6 +17,15 @@ Rectangle {
 
     color: bgColor
 
+    // Background image
+    Image {
+        anchors.fill: parent
+        source: "aequalyn-horizon.svg"
+        fillMode: Image.PreserveAspectCrop
+        smooth: true
+        opacity: 0.35
+    }
+
     TextConstants { id: textConstants }
 
     FontLoader { id: aequalynFont; source: "Aequalyn-Regular.ttf" }
@@ -24,7 +33,10 @@ Rectangle {
     property int sessionIndex: 0
     Component.onCompleted: {
         console.log("Aequalyn SDDM: component completed")
-        if (typeof sessionModel !== "undefined" && sessionModel.lastIndex >= 0) sessionIndex = sessionModel.lastIndex
+        if (typeof userModel !== "undefined" && userModel !== null) {
+            console.log("Aequalyn SDDM: userModel.count=" + userModel.count + " lastUser=[" + userModel.lastUser + "]")
+        }
+        if (typeof sessionModel !== "undefined" && sessionModel !== null && sessionModel.lastIndex >= 0) sessionIndex = sessionModel.lastIndex
         console.log("Aequalyn SDDM: sessionIndex=" + sessionIndex)
     }
 
@@ -91,8 +103,17 @@ Rectangle {
                 TextBox {
                     id: userEntry
                     width: parent.width
-                    text: (typeof userModel !== "undefined" && userModel !== null) ? userModel.lastUser : ""
                     font.pixelSize: 14
+                    text: {
+                        if (typeof userModel === "undefined" || userModel === null) return ""
+                        if (userModel.lastUser && String(userModel.lastUser).length > 0) return userModel.lastUser
+                        if (userModel.count > 0) {
+                            var idx = userModel.index(0, 0)
+                            var n = userModel.data(idx, Qt.UserRole + 1)
+                            if (n && String(n).length > 0) return n
+                        }
+                        return ""
+                    }
                     KeyNavigation.tab: pwEntry
                 }
 
@@ -150,6 +171,19 @@ Rectangle {
         function onLoginFailed() {
             pwEntry.text = ""
             pwEntry.forceActiveFocus()
+        }
+    }
+
+    // Populate the username when the user model becomes available (handles the
+    // case where userModel is populated after the theme loads).
+    Connections {
+        target: (typeof userModel !== "undefined" && userModel !== null) ? userModel : null
+        function onCountChanged() {
+            if (userEntry.text.length === 0 && userModel.count > 0) {
+                var idx = userModel.index(0, 0)
+                var n = userModel.data(idx, Qt.UserRole + 1)
+                if (n && String(n).length > 0) userEntry.text = n
+            }
         }
     }
 }
