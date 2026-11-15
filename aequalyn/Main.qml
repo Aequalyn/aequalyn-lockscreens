@@ -7,29 +7,29 @@ Rectangle {
     id: root
     width: 1920
     height: 1080
-    color: config.backgroundColor
+
+    // Safe config access
+    readonly property color bgColor: (typeof config !== "undefined" && config !== null && config.backgroundColor) ? config.backgroundColor : "#0f1115"
+    readonly property color accentColor: (typeof config !== "undefined" && config !== null && config.accentColor) ? config.accentColor : "#1793d1"
+    readonly property color textColor: (typeof config !== "undefined" && config !== null && config.textColor) ? config.textColor : "#e8e8e8"
+    readonly property string fontFamily: (typeof config !== "undefined" && config !== null && config.fontFamily) ? config.fontFamily : "Aequalyn"
+    readonly property bool use24h: (typeof config !== "undefined" && config !== null && config.use24HourClock !== undefined) ? config.use24HourClock : true
+
+    color: bgColor
 
     TextConstants { id: textConstants }
 
-    // Font loader for the bundled Aequalyn font
     FontLoader { id: aequalynFont; source: "Aequalyn-Regular.ttf" }
 
-    property string fontFamily: config.fontFamily || "Aequalyn"
-
-    // User & session state
-    property int userIndex: 0
     property int sessionIndex: 0
     Component.onCompleted: {
-        if (typeof userModel !== "undefined" && userModel.lastIndex >= 0) userIndex = userModel.lastIndex
+        console.log("Aequalyn SDDM: component completed")
         if (typeof sessionModel !== "undefined" && sessionModel.lastIndex >= 0) sessionIndex = sessionModel.lastIndex
+        console.log("Aequalyn SDDM: sessionIndex=" + sessionIndex)
     }
-    property bool isLoggingIn: false
 
     // Background
-    Rectangle {
-        anchors.fill: parent
-        color: config.backgroundColor
-    }
+    Rectangle { anchors.fill: parent; color: bgColor }
 
     // Centered content
     Column {
@@ -40,8 +40,7 @@ Rectangle {
         // Logo
         Image {
             source: "aequalyn-mark.svg"
-            width: 96
-            height: 96
+            width: 96; height: 96
             anchors.horizontalCenter: parent.horizontalCenter
             fillMode: Image.PreserveAspectFit
             smooth: true
@@ -49,8 +48,7 @@ Rectangle {
 
         Image {
             source: "aequalyn-wordmark.svg"
-            width: 220
-            height: 40
+            width: 200; height: 36
             anchors.horizontalCenter: parent.horizontalCenter
             fillMode: Image.PreserveAspectFit
             smooth: true
@@ -60,77 +58,78 @@ Rectangle {
         Text {
             id: clockText
             anchors.horizontalCenter: parent.horizontalCenter
-            color: config.textColor
+            color: textColor
             font.family: root.fontFamily
-            font.pixelSize: 48
+            font.pixelSize: 44
             font.weight: Font.Light
-            text: Qt.formatTime(new Date(), config.use24HourClock ? "HH:mm" : "hh:mm AP")
+            text: Qt.formatTime(new Date(), root.use24h ? "HH:mm" : "hh:mm AP")
             Timer {
                 interval: 1000
                 running: true
                 repeat: true
-                onTriggered: clockText.text = Qt.formatTime(new Date(), config.use24HourClock ? "HH:mm" : "hh:mm AP")
+                onTriggered: clockText.text = Qt.formatTime(new Date(), root.use24h ? "HH:mm" : "hh:mm AP")
             }
         }
 
         // Login card
         Rectangle {
             width: parent.width
-            height: loginColumn.implicitHeight + 40
+            height: loginCol.implicitHeight + 40
             radius: 16
             color: Qt.rgba(1, 1, 1, 0.04)
             border.color: Qt.rgba(1, 1, 1, 0.08)
             border.width: 1
 
             Column {
-                id: loginColumn
+                id: loginCol
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
                 anchors.margins: 20
                 spacing: 12
 
-                // User
-                ComboBox {
-                    id: userCombo
+                TextBox {
+                    id: userEntry
                     width: parent.width
-                    model: userModel
-                    textRole: "name"
-                    currentIndex: root.userIndex
-                    onCurrentIndexChanged: { if (currentIndex >= 0) root.userIndex = currentIndex }
+                    text: (typeof userModel !== "undefined" && userModel !== null) ? userModel.lastUser : ""
+                    font.pixelSize: 14
+                    KeyNavigation.tab: pwEntry
                 }
 
-                // Password
-                TextField {
-                    id: passwordField
+                PasswordBox {
+                    id: pwEntry
                     width: parent.width
-                    placeholderText: textConstants.password
-                    echoMode: TextInput.Password
-                    onAccepted: doLogin()
+                    KeyNavigation.backtab: userEntry
+                    KeyNavigation.tab: loginBtn
+                    Keys.onPressed: {
+                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                            sddm.login(userEntry.text, pwEntry.text, sessionIndex)
+                            event.accepted = true
+                        }
+                    }
                 }
 
-                // Login button
                 Button {
+                    id: loginBtn
                     width: parent.width
                     text: textConstants.login
-                    enabled: !root.isLoggingIn
-                    onClicked: doLogin()
+                    onClicked: sddm.login(userEntry.text, pwEntry.text, sessionIndex)
+                    KeyNavigation.backtab: pwEntry
                 }
 
-                // Session
                 ComboBox {
                     id: sessionCombo
                     width: parent.width
-                    model: sessionModel
-                    textRole: "name"
-                    currentIndex: root.sessionIndex
-                    onCurrentIndexChanged: { if (currentIndex >= 0) root.sessionIndex = currentIndex }
+                    model: (typeof sessionModel !== "undefined") ? sessionModel : null
+                    index: root.sessionIndex
+                    visible: (typeof sessionModel !== "undefined" && sessionModel !== null) && sessionModel.count > 1
+                    onIndexChanged: { if (index >= 0) root.sessionIndex = index }
                 }
             }
         }
     }
 
-    // Power buttons (bottom right)
+    // Power buttons
     Row {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
@@ -146,17 +145,11 @@ Rectangle {
         }
     }
 
-    function doLogin() {
-        root.isLoggingIn = true
-        sddm.login(userCombo.currentText, passwordField.text, root.sessionIndex)
-    }
-
     Connections {
         target: sddm
         function onLoginFailed() {
-            root.isLoggingIn = false
-            passwordField.text = ""
-            passwordField.forceActiveFocus()
+            pwEntry.text = ""
+            pwEntry.forceActiveFocus()
         }
     }
 }
