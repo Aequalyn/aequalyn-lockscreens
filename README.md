@@ -47,3 +47,7 @@ Aequalyn's Settings → Lock Screens page.
 The individual themes retain their own licenses (see each folder's LICENSE file).
 This repository's curation/integration code is released under the same terms as
 Aequalyn.
+## Documentation
+
+- `SECURITY.md` — security model and concerns.
+- `SKILL.md` — development/install skill reference.
