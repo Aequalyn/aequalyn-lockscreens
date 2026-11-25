@@ -44,7 +44,7 @@ Manual:
 sudo cp -r <theme-folder> /usr/share/sddm/themes/<theme-name>
 ```
 Then set `Current=<theme-name>` in `/etc/sddm.conf` or `/etc/sddm.conf.d/`, or use
-Aequalyn Settings → Lock Screens.
+the control center's Login screen page.
 
 - **ZenMatrix:** `zenmatrix/install.sh` (TUI, 7 steps: deps, fonts, copy, SDDM config,
   variant selection, avatar, service enable; supports Arch/Fedora/Ubuntu/openSUSE/Void;

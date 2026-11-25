@@ -8,6 +8,7 @@ and can be installed into `/usr/share/sddm/themes/`.
 
 | Theme | Author | License | Notes |
 |---|---|---|---|
+| Aequalyn | [Aequalyn](https://github.com/Aequalyn) | MIT | The default: the desktop's own login screen |
 | Abstract Dark | Fabio Almeida ([3ximus](https://github.com/3ximus)) | CC-BY-SA | Dark abstract background |
 | Echo | xCaptaiN09 | MIT | macOS Terminal style, frosted glass |
 | Glyph SDDM | xCaptaiN09 | MIT | Nothing Phone aesthetic |
@@ -21,7 +22,7 @@ and can be installed into `/usr/share/sddm/themes/`.
 
 All credit goes to the original authors of these themes. Aequalyn only curates,
 patches (where needed for Qt6 compatibility) and integrates them into the
-Settings app. Please support the original creators:
+control center. Please support the original creators:
 
 - **Fabio Almeida** — Abstract Dark SDDM Theme — https://github.com/3ximus/abstract-dark-sddm-theme
 - **xCaptaiN09** — Echo, Glyph, Pixie SDDM — https://github.com/xCaptaiN09
@@ -40,7 +41,7 @@ sudo cp -r <theme-folder> /usr/share/sddm/themes/<theme-name>
 ```
 
 Then set it in `/etc/sddm.conf` under `[Theme] Current=<theme-name>`, or use
-Aequalyn's Settings → Lock Screens page.
+the control center's Login screen page (`qs ipc call aequalyn page lockscreens`).
 
 ## License
 
